@@ -1,5 +1,5 @@
 "use strict";
-/* Verdant app: router, dashboard, workspaces (identify + diagnose), library, engine status. */
+/* Plantifi.ai app: router, dashboard, workspaces (identify + diagnose), library, command palette, engine status. */
 
 const $ = (id) => document.getElementById(id);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -15,7 +15,7 @@ const ago = (ts) => {
   return s < 60 ? "just now" : s < 3600 ? Math.floor(s / 60) + " min ago" : s < 86400 ? Math.floor(s / 3600) + " h ago" : Math.floor(s / 86400) + " d ago";
 };
 let toastTimer;
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3000); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3200); }
 
 /* ============ Theme ============ */
 function isDark() { const t = document.documentElement.dataset.theme; return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; }
@@ -24,7 +24,8 @@ function applyTheme(t) {
   $$("[data-theme-toggle] use").forEach((u) => u.setAttribute("href", isDark() ? "#i-sun" : "#i-moon"));
 }
 applyTheme(store.get("theme", ""));
-$$("[data-theme-toggle]").forEach((b) => (b.onclick = () => { const n = isDark() ? "light" : "dark"; store.set("theme", n); applyTheme(n); }));
+function toggleTheme() { const n = isDark() ? "light" : "dark"; store.set("theme", n); applyTheme(n); }
+$$("[data-theme-toggle]").forEach((b) => (b.onclick = toggleTheme));
 
 /* ============ Engine status ============ */
 let mode = store.get("mode", "auto");
@@ -78,7 +79,7 @@ const CFG = {
     kind: "identify", pills: "plantnet,global", icon: "leaf",
     title: "Identify a plant", sub: "Name any plant from a photo. Two AI models cross-check each other.",
     hint: "Drop a plant photo here", tips: ["Fill the frame with one leaf, flower or fruit", "Use natural light and keep it in focus", "Try several angles for a more reliable match"],
-    phTitle: "Your result will appear here", phText: "Add a photo and Verdant returns the species, confidence, taxonomy and alternatives in about a second.",
+    phTitle: "Your result will appear here", phText: "Add a photo and Plantifi.ai returns the species, confidence, taxonomy and alternatives in about a second.",
   },
   diagnose: {
     kind: "diagnose", pills: "disease", icon: "pulse",
@@ -152,31 +153,59 @@ class Workspace {
     this.showPreview(this.cur.url);
   }
   showPreview(url) { this.preview.src = url; this.preview.classList.remove("hidden"); this.hintEl.classList.add("hidden"); this.drop.classList.add("has-img"); }
+  /* --- analysis stepper: shows real pipeline stages while the models run --- */
+  stepperStart(steps) {
+    if (!this.stEl) { this.stEl = document.createElement("div"); this.stEl.className = "card stepper"; this.result.parentNode.insertBefore(this.stEl, this.result); }
+    this.steps = steps; this.stEl.classList.remove("hidden"); this.ph.classList.add("hidden"); this.result.classList.add("hidden");
+    this.stEl.innerHTML = `<h3>${icon("sparkle")} Analysing your photo</h3><p class="sub">Running on your device. Nothing is uploaded.</p>
+      <ol class="st-list">${steps.map(([k, l]) => `<li class="st" data-k="${k}"><span class="si2">${icon("check")}</span><span>${esc(l)}</span><small></small></li>`).join("")}</ol>`;
+  }
+  stepperSet(key) {
+    const keys = this.steps.map((s) => s[0]), at = keys.indexOf(key);
+    $$(".st", this.stEl).forEach((li, i) => { li.classList.toggle("done", i < at); li.classList.toggle("active", i === at); });
+  }
+  stepperNote(key, text) { const s = this.stEl?.querySelector(`.st[data-k="${key}"] small`); if (s) s.textContent = text; }
+  stepperEnd() { this.stEl?.classList.add("hidden"); }
   async run() {
     const my = ++this.runId, k = this.cfg.kind;
     this.retry.disabled = true; this.scan.classList.remove("hidden");
+    const need = k === "identify" ? speciesIds() : ["disease"];
+    const names = { plantnet: "Pl@ntNet model · Europe", global: "BioCLIP model · worldwide", disease: "LeafDoctor model" };
+    const steps = [["load", "Loading AI models"], ...(k === "identify" ? need.map((i) => [i, names[i]]) : [["disease", names.disease]]),
+      ...(k === "identify" && need.length > 1 ? [["fuse", "Cross-checking the models"]] : []), [k === "identify" ? "info" : "plan", k === "identify" ? "Fetching plant details" : "Matching a treatment plan"]];
+    this.stepperStart(steps);
     try {
-      const need = k === "identify" ? speciesIds() : ["disease"];
+      this.stepperSet("load");
       if (!need.every((i) => Engine.isLoaded(i))) {
-        this.progressShow(null, "Preparing AI models…");
-        const t = setInterval(() => { const p = Engine.pctFor(need); this.progressShow(p, `Downloading AI model${need.length > 1 ? "s" : ""}… ${p}% (one-time, then cached)`); }, 300);
+        const t = setInterval(() => this.stepperNote("load", Engine.pctFor(need) + "% · one-time download"), 300);
         try { await Promise.all(need.map(loadModel)); } finally { clearInterval(t); }
         if (my !== this.runId) return;
       }
-      this.progressShow(null, "Analysing photo…");
-      const data = k === "identify" ? await Engine.identify(this.cur.img, mode) : await Engine.diagnose(this.cur.img);
+      this.stepperNote("load", "ready");
+      let data;
+      if (k === "identify") {
+        data = await Engine.identify(this.cur.img, mode, (id) => { this.stepperSet(id); });
+        if (my !== this.runId) return;
+        this.stepperSet("info");
+        await Promise.race([Engine.lookup(data.items[0].sci), new Promise((r) => setTimeout(r, 2600))]);
+      } else {
+        this.stepperSet("disease");
+        data = await Engine.diagnose(this.cur.img);
+        if (my !== this.runId) return;
+        this.stepperSet("plan"); await new Promise((r) => setTimeout(r, 350));
+      }
       if (my !== this.runId) return;
       this.progressHide(); data.photo = this.cur.url;
       this.show(data); addHistory(k, data, this);
     } catch (e) {
       if (my !== this.runId) return;
-      console.error(e); this.progressHide(); this.ph.classList.add("hidden"); this.result.classList.remove("hidden");
+      console.error(e); this.progressHide(); this.stepperEnd(); this.ph.classList.add("hidden"); this.result.classList.remove("hidden");
       this.result.innerHTML = `<div class="card empty"><h3>Couldn't analyse that</h3><p class="err">${esc(e.message || e)}</p></div>`;
     } finally { if (my === this.runId) { this.scan.classList.add("hidden"); this.retry.disabled = false; } }
   }
   show(data) {
     Object.assign(this.S, { data, sel: 0, tab: "overview", view: "ref", animate: true });
-    this.ph.classList.add("hidden"); this.result.classList.remove("hidden");
+    this.stepperEnd(); this.ph.classList.add("hidden"); this.result.classList.remove("hidden");
     this.paint();
     if (matchMedia("(max-width: 900px)").matches) this.result.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -195,7 +224,7 @@ class Workspace {
   async act(a) {
     const text = this.shareText();
     if (a === "copy") { try { await navigator.clipboard.writeText(text); toast("Copied to clipboard"); } catch { toast("Copy failed"); } }
-    if (a === "share") { if (navigator.share) { try { await navigator.share({ title: "Verdant", text }); } catch {} } else { try { await navigator.clipboard.writeText(text); toast("Copied text (sharing unavailable)"); } catch {} } }
+    if (a === "share") { if (navigator.share) { try { await navigator.share({ title: "Plantifi.ai", text }); } catch {} } else { try { await navigator.clipboard.writeText(text); toast("Copied text (sharing unavailable)"); } catch {} } }
     if (a === "print") print();
     if (a === "to-diagnose" || a === "to-identify") {
       const target = a === "to-diagnose" ? ws.diagnose : ws.identify;
@@ -249,6 +278,15 @@ function paintIdentify(w) {
     ${w.pane("overview", idOverview(info, item, sci))}${w.pane("taxonomy", idTaxonomy(info, tax, sci))}${w.pane("matches", idMatches(w))}${w.pane("tech", idTech(d))}
   </article>`;
   w.animateRing(item.score);
+  if (S.tab === "matches") hydrateThumbs(w);
+}
+/* Fill the top-matches thumbnails from Wikipedia, one at a time (lookups are cached). */
+async function hydrateThumbs(w) {
+  const d = w.S.data;
+  for (const img of $$(".alt .th[data-th]", w.result)) {
+    if (w.S.data !== d) return;
+    try { const i = await Engine.lookup(img.dataset.th); if (i?.wiki?.thumb && img.isConnected) img.src = i.wiki.thumb; } catch {}
+  }
 }
 function idOverview(info, item, sci) {
   const wiki = info?.wiki; let body;
@@ -272,6 +310,7 @@ function idTaxonomy(info, tax, sci) {
 function idMatches(w) {
   const d = w.S.data;
   return `<div class="alts">${d.items.map((it, i) => `<button class="alt ${i === w.S.sel ? "sel" : ""}" data-sel="${i}"><span class="rk">${i + 1}</span>
+    <img class="th" data-th="${esc(it.sci)}" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
     <span class="nm">${esc(it.sci)}${it.agree === 2 ? '<span class="agree-dot" title="Both models rank this in their top 3"></span>' : ""}<em>${esc(it.family || "")}</em></span>
     <span class="meter"><i style="width:${Math.max(2, it.score * 100).toFixed(0)}%"></i></span><span class="pc">${pct(it.score)}</span></button>`).join("")}</div>
     <p class="tech-note">Select a match to see its details. A green dot means both AI models ranked it in their top 3.</p>`;
@@ -282,7 +321,7 @@ function idTech(d) {
   return `<table class="tech-table"><thead><tr><th>Model</th><th>Top-1</th><th>Confidence</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>
     <p class="tech-note"><strong>Fusion:</strong> the models' probabilities are combined as a weighted mean (Pl@ntNet 0.4, BioCLIP 0.6). When both rank a species in their top 3 they are combined as independent evidence (noisy-OR), so agreement raises confidence. Total ${Math.round(d.totalMs)} ms on-device.</p>`;
 }
-function identifyText(w) { const it = w.S.data.items[w.S.sel], c = w.S.infoFor === it.sci && w.S.info?.common?.[0]; return `${c ? c + " (" + it.sci + ")" : it.sci} · ${Math.round(it.score * 100)}% confidence · identified with Verdant`; }
+function identifyText(w) { const it = w.S.data.items[w.S.sel], c = w.S.infoFor === it.sci && w.S.info?.common?.[0]; return `${c ? c + " (" + it.sci + ")" : it.sci} · ${Math.round(it.score * 100)}% confidence · identified with Plantifi.ai`; }
 
 /* ============ Diagnose result ============ */
 const SEV = { Moderate: [2, "#d97706", "amber"], High: [3, "#ea580c", "amber"], Severe: [4, "#dc2626", "red"] };
@@ -330,7 +369,7 @@ function dxTreatment(c, kb) {
     <div><h4>Prevention</h4><ul class="bul">${kb.prevention.map((t) => `<li>${icon("shield")}${esc(t)}</li>`).join("")}</ul></div></div>
     <div class="notice warn">${icon("alert")}<div>Always follow product labels and local regulations for any fungicide, bactericide or pesticide. Prefer integrated, low-chemical options first.</div></div>`;
 }
-function diagnoseText(w) { const it = w.S.data.items[w.S.sel], c = Knowledge.CLASSES[it.id]; return `${c.crop}: ${c.healthy ? "healthy" : c.condition} · ${Math.round(it.p * 100)}% confidence · diagnosed with Verdant`; }
+function diagnoseText(w) { const it = w.S.data.items[w.S.sel], c = Knowledge.CLASSES[it.id]; return `${c.crop}: ${c.healthy ? "healthy" : c.condition} · ${Math.round(it.p * 100)}% confidence · diagnosed with Plantifi.ai`; }
 
 /* ============ History / dashboard / library ============ */
 let history = [];
@@ -355,18 +394,50 @@ function persist() {
   try { localStorage.setItem("history2", JSON.stringify(history)); } catch { history = history.slice(0, 10); store.set("history2", JSON.stringify(history)); }
   renderDashboard(); renderLibrary();
 }
+const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
+const EMPTY_SVG = `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M32 54V32M32 32c0-10 7-16 18-16 0 11-6 18-18 16zM32 42c0-8-5-12-14-12 0 9 5 14 14 12z"/></svg>`;
 function renderDashboard() {
   $("libCount").textContent = history.length;
   const ids = history.filter((h) => h.kind === "identify"), dx = history.filter((h) => h.kind === "diagnose");
-  const species = new Set(ids.map((h) => h.payload.items[0].sci)).size, sick = dx.filter((h) => !Knowledge.CLASSES[h.payload.items[0].id].healthy).length;
+  const sci = (h) => h.payload.items[0].sci;
+  const species = new Set(ids.map(sci)).size, sick = dx.filter((h) => !Knowledge.CLASSES[h.payload.items[0].id].healthy).length, healthy = dx.length - sick;
   const avg = history.length ? Math.round((history.reduce((a, h) => a + (h.payload.items[0].score ?? h.payload.items[0].p), 0) / history.length) * 100) : 0;
-  const stat = (lab, val, sub, ic) => `<div class="stat"><div class="lab">${lab}${icon(ic)}</div><div class="val">${val}</div><div class="sub">${sub}</div></div>`;
-  $("stats").innerHTML = stat("Total scans", history.length, "identifications + diagnoses", "layers") + stat("Species found", species, "unique plants", "leaf") + stat("Diseases found", sick, `${dx.length} leaves checked`, "bug") + stat("Avg. confidence", history.length ? avg + "%" : "–", "across all scans", "bar");
   const days = [...Array(7)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (6 - i)); return d; });
   const counts = days.map((d) => history.filter((h) => h.ts >= d.getTime() && h.ts < d.getTime() + 864e5).length), max = Math.max(1, ...counts);
-  $("chart").innerHTML = days.map((d, i) => `<div class="col"><em>${counts[i] || ""}</em><b class="${counts[i] ? "" : "zero"}" style="height:${counts[i] ? Math.round(10 + (counts[i] / max) * 90) : 4}px"></b><span>${d.toLocaleDateString(undefined, { weekday: "short" })}</span></div>`).join("");
-  $("recent").innerHTML = history.length ? history.slice(0, 5).map((h) => { const m = entryMeta(h); return `<button class="r-item" data-open="${h.id}"><img src="${h.t}" alt=""><div class="t"><b>${esc(m.title)}</b><small>${esc(m.label)} · ${ago(h.ts)}</small></div><span class="badge ${m.tone}">${Math.round(m.score * 100)}%</span></button>`; }).join("")
-    : `<div class="empty-mini">No scans yet. Try <a href="#/app/identify">identifying a plant</a> or <a href="#/app/diagnose">diagnosing a leaf</a>.</div>`;
+
+  const thumbs = [["identify", 0, "plant-monstera", "Monstera"], ["identify", 3, "plant-aloe", "Aloe"], ["identify", 1, "plant-hibiscus", "Hibiscus"], ["diagnose", 0, "dx-tomato-yellow-leaf-curl", "Tomato leaf"], ["diagnose", 2, "dx-squash-powdery-mildew", "Squash leaf"]]
+    .map(([k, i, f, n]) => `<button class="dh-th" data-sample="${k}:${i}" title="Try: ${n}" aria-label="Try sample ${n}"><img src="samples/${f}.jpg" alt=""></button>`).join("");
+  $("dashHero").innerHTML = `<div class="dh"><p class="eyebrow2">${new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
+    <h1>${greeting()}, plant lover</h1><p>Identify plants, diagnose leaves and track everything you scan. Private and on-device.</p>
+    <div class="dh-actions"><a class="btn" href="#/app/identify">${icon("camera")} Identify a plant</a><a class="btn ghost" href="#/app/diagnose">${icon("pulse")} Diagnose a leaf</a></div>
+    <div class="dh-samples"><small>Try a sample</small>${thumbs}</div></div>`;
+
+  const spark = (() => { const w = 84, h = 30, pts = counts.map((c, i) => `${(i / 6) * w},${h - 3 - (c / max) * (h - 8)}`).join(" "); return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; })();
+  const stat = (lab, val, sub, ic, tone = "", extra = "") => `<div class="stat"><div class="lab">${lab}<span class="si ${tone}">${icon(ic)}</span></div><div class="val">${val}</div><div class="sub">${sub}</div>${extra}</div>`;
+  const C = 2 * Math.PI * 48, hv = dx.length ? (healthy / dx.length) * C : 0, sv = dx.length ? (sick / dx.length) * C : 0;
+  const top = Object.entries(ids.reduce((m, h) => { const n = h.name || sci(h); m[n] = (m[n] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 4), topMax = top[0]?.[1] || 1;
+  const recent = history.length ? history.slice(0, 5).map((h) => { const m = entryMeta(h); return `<button class="r-item" data-open="${h.id}"><img src="${h.t}" alt=""><div class="t"><b>${esc(m.title)}</b><small>${esc(m.label)} · ${ago(h.ts)}</small></div><span class="badge ${m.tone}">${Math.round(m.score * 100)}%</span></button>`; }).join("")
+    : `<div class="empty-mini">${EMPTY_SVG}<span>No scans yet. Try a sample above, or <a href="#/app/identify">identify a plant</a>.</span></div>`;
+
+  $("dashRest").innerHTML = `
+    <div class="stats-grid">
+      ${stat("Total scans", history.length, "identifications + diagnoses", "layers", "", spark)}
+      ${stat("Species found", species, "unique plants", "leaf", "blue")}
+      ${stat("Diseases found", sick, `${dx.length} leaves checked`, "bug", "amber")}
+      ${stat("Avg. confidence", history.length ? avg + "%" : "–", "across all scans", "bar", "violet")}
+    </div>
+    <div class="dash-grid">
+      <div class="card"><div class="card-h"><h3>Activity</h3><span class="muted small">Last 7 days</span></div>
+        <div class="chart">${days.map((d, i) => `<div class="col"><em>${counts[i] || ""}</em><b class="${counts[i] ? "" : "zero"}" style="height:${counts[i] ? Math.round(10 + (counts[i] / max) * 90) : 4}px"></b><span>${d.toLocaleDateString(undefined, { weekday: "short" })}</span></div>`).join("")}</div></div>
+      <div class="card"><div class="card-h"><h3>Leaf health</h3><span class="muted small">${dx.length} checked</span></div>
+        <div class="donut-wrap"><svg class="donut" viewBox="0 0 120 120"><circle class="bgc" cx="60" cy="60" r="48"/>
+          ${dx.length ? `<circle cx="60" cy="60" r="48" stroke="var(--ok)" stroke-dasharray="${hv} ${C}" transform="rotate(-90 60 60)" stroke-linecap="butt"/><circle cx="60" cy="60" r="48" stroke="var(--amber)" stroke-dasharray="${sv} ${C}" stroke-dashoffset="${-hv}" transform="rotate(-90 60 60)"/>` : ""}
+          <text x="60" y="66" text-anchor="middle">${dx.length ? Math.round((healthy / dx.length) * 100) + "%" : "–"}</text></svg>
+          <div class="legend"><div><i style="background:var(--ok)"></i>Healthy<b>${healthy}</b></div><div><i style="background:var(--amber)"></i>Diseased<b>${sick}</b></div></div></div></div>
+      <div class="card"><div class="card-h"><h3>Top plants</h3><span class="muted small">By scans</span></div>
+        <div class="toplist">${top.length ? top.map(([n, c], i) => `<div class="tl"><span class="rk">${i + 1}</span><span class="nm">${esc(n)}<i style="--w:${Math.round((c / topMax) * 100)}%"></i></span><span class="ct">${c}</span></div>`).join("") : `<div class="empty-mini" style="padding:24px 0">${EMPTY_SVG}<span>Identify a plant to see your favourites.</span></div>`}</div></div>
+    </div>
+    <div class="card" style="padding-bottom:12px"><div class="card-h"><h3>Recent scans</h3><a href="#/app/library" class="link">View all</a></div><div class="recent">${recent}</div></div>`;
 }
 let libFilter = "all", libQuery = "";
 function renderLibrary() {
@@ -392,7 +463,7 @@ $("exportBtn").onclick = () => {
   if (!history.length) return toast("Nothing to export yet");
   const rows = [["date", "type", "result", "detail", "confidence_pct"], ...history.map((h) => { const m = entryMeta(h); return [new Date(h.ts).toISOString(), m.label, m.title, m.sub, Math.round(m.score * 100)]; })];
   const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "verdant-library.csv"; a.click(); toast("Exported CSV");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "plantifi-library.csv"; a.click(); toast("Exported CSV");
 };
 
 /* ============ Camera ============ */
@@ -453,10 +524,17 @@ function startApp() {
   renderDashboard(); renderLibrary(); paintEngine(); initPhoneCard();
   if (matchMedia("(pointer: coarse)").matches && !localStorage.getItem("seenDl")) { store.set("seenDl", "1"); toast("First launch downloads AI models (~100 MB). Wi-Fi recommended."); }
   ensureSpecies().catch((e) => toast("AI failed to load: " + (e.message || e)));
+  if (!store.get("welcomed") && !/[?&]s=/.test(location.hash)) setTimeout(() => { if (!$("app").classList.contains("hidden")) $("welcome").showModal(); }, 700);
+}
+async function runSample(kind, idx) {
+  if (activeView !== kind) go(kind);
+  const t0 = Date.now(); while (!ws[kind] && Date.now() - t0 < 3000) await new Promise((r) => setTimeout(r, 50));
+  const f = SAMPLES[kind][idx]; if (!f || !ws[kind]) return;
+  try { ws[kind].setImage(await fetchSample(`samples/${f[1]}.jpg`)); } catch { toast("Could not load that sample (offline?)"); }
 }
 function route() {
   const h = location.hash;
-  const m = h.match(/^#\/app(?:\/(\w+))?/);
+  const m = h.match(/^#\/app(?:\/(\w+))?(?:\?(.*))?$/);
   if (h && !m && !h.startsWith("#/")) return; // in-page anchor
   const inApp = !!m;
   $("landing").classList.toggle("hidden", inApp); $("app").classList.toggle("hidden", !inApp);
@@ -470,6 +548,8 @@ function route() {
   closeDrawer(); scrollTo(0, 0);
   if (v === "identify" || v === "diagnose") { loadSamples(ws[v]); if (v === "diagnose") loadModel("disease").catch(() => {}); }
   if (v === "dashboard") renderDashboard();
+  const sp = m[2] && new URLSearchParams(m[2]).get("s");
+  if (sp != null && ws[v]) { window.history.replaceState(null, "", location.pathname + location.search + "#/app/" + v); runSample(v, +sp); }
 }
 addEventListener("hashchange", route);
 $$("[data-scroll]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); document.querySelector(a.getAttribute("href"))?.scrollIntoView({ behavior: "smooth" }); }));
@@ -484,5 +564,79 @@ document.addEventListener("paste", (e) => {
 const closeDrawer = () => { $("side").classList.remove("open"); $("scrim").classList.add("hidden"); };
 $("menuBtn").onclick = () => { $("side").classList.add("open"); $("scrim").classList.remove("hidden"); };
 $("scrim").onclick = closeDrawer;
+
+/* ============ Dashboard sample thumbnails ============ */
+document.addEventListener("click", (e) => { const b = e.target.closest("[data-sample]"); if (!b) return; const [k, i] = b.dataset.sample.split(":"); runSample(k, +i); });
+
+/* ============ Welcome dialog ============ */
+const closeWelcome = () => { store.set("welcomed", "1"); $("welcome").close(); };
+$("wlClose").onclick = closeWelcome;
+$("wlSample").onclick = () => { closeWelcome(); runSample("identify", 0); };
+$("welcome").addEventListener("cancel", () => store.set("welcomed", "1"));
+
+/* ============ Drop a photo anywhere ============ */
+let dragDepth = 0;
+const inApp = () => appStarted && !$("app").classList.contains("hidden");
+const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+addEventListener("dragenter", (e) => { if (!inApp() || !hasFiles(e)) return; dragDepth++; $("dropAllText").textContent = activeView === "diagnose" ? "Drop a leaf photo to diagnose" : "Drop a photo to identify"; $("dropAll").classList.remove("hidden"); });
+addEventListener("dragleave", () => { if (!inApp()) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $("dropAll").classList.add("hidden"); });
+addEventListener("dragover", (e) => { if (inApp() && hasFiles(e)) e.preventDefault(); });
+addEventListener("drop", (e) => {
+  dragDepth = 0; $("dropAll").classList.add("hidden");
+  if (!inApp() || e.defaultPrevented || !hasFiles(e)) return;
+  e.preventDefault();
+  const file = e.dataTransfer.files[0], kind = activeView === "diagnose" ? "diagnose" : "identify";
+  if (activeView !== kind) go(kind);
+  ws[kind].setImage(file);
+});
+
+/* ============ Command palette (Ctrl/Cmd + K) ============ */
+const CMDS = () => {
+  const nav = [["dashboard", "Go to Dashboard", "home"], ["identify", "Identify a plant", "leaf"], ["diagnose", "Diagnose a leaf", "pulse"], ["library", "Open Library", "clock"], ["about", "How it works", "book"]]
+    .map(([v, l, ic]) => ({ g: "Navigate", l, ic, run: () => go(v) }));
+  const samples = [...SAMPLES.identify.map(([n], i) => ({ g: "Try a sample", l: `Identify: ${n}`, ic: "sparkle", run: () => runSample("identify", i) })),
+    ...SAMPLES.diagnose.map(([n], i) => ({ g: "Try a sample", l: `Diagnose: ${n}`, ic: "sparkle", run: () => runSample("diagnose", i) }))];
+  const acts = [
+    { g: "Actions", l: "Upload a photo", ic: "upload", run: () => { const k = activeView === "diagnose" ? "diagnose" : "identify"; if (activeView !== k) go(k); setTimeout(() => ws[k].file.click(), 200); } },
+    { g: "Actions", l: isDark() ? "Switch to light mode" : "Switch to dark mode", ic: isDark() ? "sun" : "moon", run: toggleTheme },
+    { g: "Actions", l: "Open settings", ic: "sliders", run: () => $("settingsBtn").click() },
+    { g: "Actions", l: "Export library as CSV", ic: "download", run: () => $("exportBtn").click() },
+    { g: "Actions", l: "Clear library", ic: "trash", run: () => $("clearBtn").click() },
+    { g: "Actions", l: "Back to website", ic: "globe", run: () => { location.hash = "#/"; } },
+  ];
+  return [...nav, ...acts, ...samples];
+};
+let ckItems = [], ckSel = 0;
+function ckRender() {
+  const q = $("ckInput").value.trim().toLowerCase();
+  ckItems = CMDS().filter((c) => !q || (c.l + " " + c.g).toLowerCase().includes(q));
+  ckSel = Math.min(ckSel, Math.max(0, ckItems.length - 1));
+  let last = "";
+  $("ckList").innerHTML = ckItems.length ? ckItems.map((c, i) => `${c.g !== last ? `<div class="ck-group">${(last = c.g)}</div>` : ""}<div class="ck-item ${i === ckSel ? "sel" : ""}" role="option" data-i="${i}">${icon(c.ic)}<span>${esc(c.l)}</span></div>`).join("") : `<div class="ck-empty">No results for “${esc(q)}”</div>`;
+  $("ckList").querySelector(".sel")?.scrollIntoView({ block: "nearest" });
+}
+function ckOpen() { if (!inApp()) return; $("ckInput").value = ""; ckSel = 0; ckRender(); if (!$("cmdk").open) $("cmdk").showModal(); $("ckInput").focus(); }
+function ckRun(i) { const c = ckItems[i]; if (!c) return; $("cmdk").close(); setTimeout(c.run, 60); }
+$("ckInput").addEventListener("input", () => { ckSel = 0; ckRender(); });
+$("ckInput").addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown") { e.preventDefault(); ckSel = (ckSel + 1) % Math.max(1, ckItems.length); ckRender(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); ckSel = (ckSel - 1 + ckItems.length) % Math.max(1, ckItems.length); ckRender(); }
+  else if (e.key === "Enter") { e.preventDefault(); ckRun(ckSel); }
+});
+$("ckList").addEventListener("click", (e) => { const it = e.target.closest(".ck-item"); if (it) ckRun(+it.dataset.i); });
+$("cmdk").addEventListener("click", (e) => { if (e.target === $("cmdk")) $("cmdk").close(); });
+$("searchBtn").onclick = ckOpen; $("searchBtn2").onclick = ckOpen;
+addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); ckOpen(); }
+  else if (e.key === "/" && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) && inApp() && !document.querySelector("dialog[open]")) { e.preventDefault(); ckOpen(); }
+});
+
+/* ============ Landing: scroll reveal ============ */
+(() => {
+  const els = $$("#landing .reveal"); if (!els.length || !("IntersectionObserver" in window)) return;
+  $("landing").classList.add("reveal-on");
+  const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+  els.forEach((el) => io.observe(el));
+})();
 
 route();
