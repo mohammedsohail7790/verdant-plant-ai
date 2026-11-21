@@ -1,4 +1,4 @@
-# Tiny static web server for Verdant. No installs, no admin rights needed.
+# Tiny static web server for Plantifi.ai. No installs, no admin rights needed.
 # Serves http://localhost:PORT/ for this PC and http://<LAN-IP>:PORT/ so a phone on the same Wi-Fi can open it.
 param([int]$Port = 8080, [switch]$NoBrowser)
 $root = $PSScriptRoot
@@ -11,7 +11,7 @@ $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, $
 try { $listener.Start() } catch { Write-Host "Could not start on port $Port (in use?). Try: .\start.ps1 -Port 8090"; exit 1 }
 
 Write-Host ""
-Write-Host "  Verdant is running" -ForegroundColor Green
+Write-Host "  Plantifi.ai is running" -ForegroundColor Green
 Write-Host "  This PC : http://localhost:$Port/"
 foreach ($u in $lan) { Write-Host "  Phone   : $u   (same Wi-Fi)" -ForegroundColor Cyan }
 Write-Host "  Allow 'powershell' in Windows Firewall if prompted so your phone can connect. Ctrl+C to stop."
