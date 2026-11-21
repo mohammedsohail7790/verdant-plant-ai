@@ -348,6 +348,12 @@ details p { padding: 0 0 20px; color: var(--muted); }
 .phone-card .qr { width: 120px; height: 120px; flex: none; background: #fff; border-radius: 12px; padding: 6px; border: 1px solid var(--line); } .phone-card .qr svg { width: 100%; height: 100%; display: block; }
 .phone-card h3 { font-size: 1rem; margin-bottom: 4px; } .phone-card code { display: inline-block; margin: 8px 0 6px; padding: 4px 10px; border-radius: 8px; background: var(--sunken); border: 1px solid var(--line); font-size: .85rem; color: var(--brand-d); }
 
+/* credits */
+.byline { margin-top: 10px; font-size: .86rem; color: var(--text-2); } .byline b, .foot-copy b, .side-credit b, .wl-credit b { font-weight: 700; background: linear-gradient(95deg, #10b981, #84cc16); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.foot-copy { grid-column: 1 / -1; font-size: .84rem; color: var(--muted); }
+.side-credit { font-size: .74rem; color: var(--muted); text-align: center; padding: 2px 0 4px; }
+.wl-credit { margin-top: 16px; font-size: .8rem; color: var(--muted); }
+
 /* command palette, welcome, drop overlay, dialogs, toast */
 dialog { border: 1px solid var(--line-2); border-radius: 20px; background: var(--panel); color: var(--text); padding: 0; width: min(480px, 92vw); box-shadow: var(--sh-3); } dialog::backdrop { background: rgba(3,12,8,.6); backdrop-filter: blur(5px); }
 dialog[open] { animation: dlg .25s cubic-bezier(.2,.8,.2,1); } @keyframes dlg { from { opacity: 0; transform: translateY(10px) scale(.98); } }
