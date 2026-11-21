@@ -44,7 +44,7 @@ const Engine = (() => {
       if (this.db) return this.db;
       return (this.db = new Promise((res, rej) => {
         if (!self.indexedDB) return rej(new Error("no indexedDB"));
-        const r = indexedDB.open("verdant-models", 1);
+        const r = indexedDB.open("plantifi-models", 1);
         r.onupgradeneeded = () => r.result.createObjectStore("blobs");
         r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
       }));
@@ -227,12 +227,13 @@ const Engine = (() => {
   }
 
   /** mode: "auto" (both models) | "plantnet" | "global" */
-  async function identify(img, mode = "auto") {
+  async function identify(img, mode = "auto", onStep) {
     const ids = mode === "auto" ? ["plantnet", "global"] : [mode];
     await Promise.all(ids.map((id) => load(id)));
     await new Promise((r) => setTimeout(r, 40)); // let the UI paint before heavy compute
     const t0 = performance.now(), runs = [];
-    for (const id of ids) runs.push(id === "plantnet" ? await runPlantNet(img) : await runGlobal(img));
+    for (const id of ids) { onStep?.(id); await new Promise((r) => setTimeout(r, 30)); runs.push(id === "plantnet" ? await runPlantNet(img) : await runGlobal(img)); }
+    if (ids.length > 1) { onStep?.("fuse"); await new Promise((r) => setTimeout(r, 220)); }
     return {
       items: fuse(runs), runs, models: ids, totalMs: performance.now() - t0,
       consensus: runs.length === 2 && runs[0].top[0].sci === runs[1].top[0].sci,
