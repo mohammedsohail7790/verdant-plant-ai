@@ -1,4 +1,4 @@
-# Verdant is a static site: no build step, publish the repository root.
+# Plantifi.ai is a static site: no build step, publish the repository root.
 [build]
   publish = "."
 
