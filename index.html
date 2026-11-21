@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1f17">
+  <title>Verdant · AI Plant Identification &amp; Leaf Disease Detection</title>
+  <meta name="description" content="Identify plants worldwide and diagnose leaf diseases with AI that runs privately in your browser. Free, no account.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23059669'/%3E%3Cpath d='M32 50V30M32 30c0-10 7-16 18-16 0 11-6 18-18 16zM32 38c0-8-5-12-14-12 0 9 5 14 14 12z' fill='none' stroke='%23ecfccb' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-logo" viewBox="0 0 64 64"><path d="M32 52V30M32 30c0-10 7-16 18-16 0 11-6 18-18 16zM32 40c0-8-5-12-14-12 0 9 5 14 14 12z" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5.1-6C9.5 14.5 12 13 13 12"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-check-c" viewBox="0 0 24 24"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><polyline points="22 4 12 14 9 11"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.7 11.1A11 11 0 0 1 21 13.6M5 12.9a11 11 0 0 1 5.2-2.7M10.7 5.1A16 16 0 0 1 22.6 9M1.4 9a16 16 0 0 1 4.7-2.9M8.5 16.1a6 6 0 0 1 7 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M19 7l-3 2M5 7l3 2M19 19l-3-2M5 19l3-2M20 13h-4M4 13h4M10 2l1 2M14 2l-1 2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+</defs></svg>
+
+<!-- ===================== LANDING ===================== -->
+<div id="landing">
+  <header class="lp-nav" id="lpNav">
+    <div class="lp-nav-in">
+      <a class="brand" href="#/"><span class="logo"><svg class="ic"><use href="#i-logo"/></svg></span><span>Verdant</span></a>
+      <nav class="lp-links" aria-label="Primary">
+        <a href="#features" data-scroll>Features</a><a href="#how" data-scroll>How it works</a><a href="#tech" data-scroll>Technology</a><a href="#faq" data-scroll>FAQ</a>
+      </nav>
+      <div class="lp-actions">
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle theme"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <a class="btn primary" href="#/app">Launch app <svg class="ic"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </header>
+
+  <section class="lp-hero">
+    <div class="lp-glow" aria-hidden="true"></div>
+    <div class="container center">
+      <a class="announce" href="#/app/diagnose"><span class="new">New</span> Leaf disease detection for 14 crops <svg class="ic"><use href="#i-arrow"/></svg></a>
+      <h1>Know every plant.<br><span class="grad">Diagnose every leaf.</span></h1>
+      <p class="lead">Verdant is an AI plant companion that identifies species worldwide and detects crop leaf diseases, with treatment advice. Everything runs privately in your browser.</p>
+      <div class="cta-row">
+        <a class="btn primary xl" href="#/app/identify"><svg class="ic"><use href="#i-camera"/></svg> Identify a plant</a>
+        <a class="btn xl" href="#/app/diagnose"><svg class="ic"><use href="#i-pulse"/></svg> Diagnose a leaf</a>
+      </div>
+      <ul class="trust"><li><svg class="ic"><use href="#i-lock"/></svg> Photos never leave your device</li><li><svg class="ic"><use href="#i-zap"/></svg> Results in under a second</li><li><svg class="ic"><use href="#i-wifi-off"/></svg> Works offline</li><li><svg class="ic"><use href="#i-check"/></svg> Free, no sign-up</li></ul>
+
+      <div class="showcase" aria-hidden="true">
+        <div class="win">
+          <div class="win-bar"><i></i><i></i><i></i><span>verdant.app / identify</span></div>
+          <div class="win-body">
+            <div class="win-side"><b></b><span class="on"></span><span></span><span></span><span></span></div>
+            <div class="win-main">
+              <div class="win-photo"></div>
+              <div class="win-card">
+                <div class="row"><span class="tag ok">Both AIs agree</span><span class="pc">96%</span></div>
+                <h4>Delicious Monster</h4><em>Monstera deliciosa · Araceae</em>
+                <div class="bars"><i style="--w:96%"></i><i style="--w:3%"></i><i style="--w:1%"></i></div>
+                <div class="chips"><span>Taxonomy</span><span>Wikipedia</span><span>Care</span></div>
+              </div>
+              <div class="win-card dis">
+                <div class="row"><span class="tag warn">Moderate severity</span><span class="pc">94%</span></div>
+                <h4>Tomato · Early blight</h4><em>Fungal · Alternaria solani</em>
+                <div class="bars"><i style="--w:94%"></i><i style="--w:4%"></i></div>
+                <div class="chips"><span>Symptoms</span><span>Treatment</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="features">
+    <div class="container">
+      <div class="sec-title"><span class="kicker">Features</span><h2>Everything you need to understand your plants</h2><p>One toolkit for gardeners, students, farmers and researchers.</p></div>
+      <div class="feat-grid">
+        <article class="feat big"><div class="f-ic"><svg class="ic"><use href="#i-leaf"/></svg></div><h3>Worldwide species identification</h3><p>Two neural networks, a European specialist and a global generalist, cross-check each other. Agreement raises confidence, disagreement is flagged honestly.</p><div class="f-tags"><span>11,000+ species</span><span>Top-5 matches</span><span>Taxonomy</span></div></article>
+        <article class="feat big"><div class="f-ic amber"><svg class="ic"><use href="#i-pulse"/></svg></div><h3>Leaf disease detection</h3><p>Detects 26 diseases and pests across 14 crops including tomato, potato, apple, grape and maize, with severity, symptoms, treatment and prevention.</p><div class="f-tags"><span>38 classes</span><span>Severity rating</span><span>Treatment plan</span></div></article>
+        <article class="feat"><div class="f-ic blue"><svg class="ic"><use href="#i-lock"/></svg></div><h3>Private by design</h3><p>Inference happens on your device. Your photos are never uploaded.</p></article>
+        <article class="feat"><div class="f-ic"><svg class="ic"><use href="#i-zap"/></svg></div><h3>Instant results</h3><p>WebAssembly-accelerated models return answers in well under a second.</p></article>
+        <article class="feat"><div class="f-ic violet"><svg class="ic"><use href="#i-book"/></svg></div><h3>Rich knowledge</h3><p>Common names, taxonomy and descriptions from GBIF and Wikipedia.</p></article>
+        <article class="feat"><div class="f-ic rose"><svg class="ic"><use href="#i-bar"/></svg></div><h3>Your plant library</h3><p>Searchable scan history with analytics and one-click export.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec tint" id="how">
+    <div class="container">
+      <div class="sec-title"><span class="kicker">How it works</span><h2>From photo to answer in three steps</h2></div>
+      <ol class="steps">
+        <li><span class="n">01</span><h3>Capture</h3><p>Upload, paste or snap a photo. It's resized locally and never sent anywhere.</p></li>
+        <li><span class="n">02</span><h3>Analyse</h3><p>Neural networks run in WebAssembly inside your tab and return ranked predictions.</p></li>
+        <li><span class="n">03</span><h3>Act</h3><p>Get names, confidence, taxonomy, and for leaves, a clear treatment plan.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="tech">
+    <div class="container">
+      <div class="sec-title"><span class="kicker">Technology</span><h2>Three open models, one pipeline</h2><p>All inference is client-side via ONNX Runtime Web. Models are downloaded once, then cached.</p></div>
+      <div class="pipeline">
+        <div class="node"><b>Photo</b><span>JPEG / PNG</span></div><i class="arrow"></i>
+        <div class="node"><b>Pre-process</b><span>resize · normalise</span></div><i class="arrow"></i>
+        <div class="node stack"><div><b>Pl@ntNet CNN</b><span>species · Europe</span></div><div><b>BioCLIP student</b><span>species · worldwide</span></div><div><b>LeafDoctor</b><span>disease · 14 crops</span></div></div><i class="arrow"></i>
+        <div class="node"><b>Fusion + KB</b><span>consensus · advice</span></div><i class="arrow"></i>
+        <div class="node"><b>Result</b><span>GBIF · Wikipedia</span></div>
+      </div>
+      <div class="model-grid">
+        <article class="mcard"><div class="mh"><span class="dot g"></span><h3>Pl@ntNet MobileNetV4</h3></div><p>Official Pl@ntCLEF 2024 model, distilled from a ViT-B teacher.</p><dl><dt>Classes</dt><dd>7,806 species</dd><dt>Top-1 / Top-5</dt><dd>71.4% / 90.6%</dd><dt>Size</dt><dd>79 MB</dd></dl></article>
+        <article class="mcard"><div class="mh"><span class="dot b"></span><h3>BioCLIP-2.5 Mobile</h3></div><p>FastViT student of BioCLIP 2.5 matched to species text embeddings.</p><dl><dt>Classes</dt><dd>4,271 species</dd><dt>Teacher agreement</dt><dd>71.7% / 88.8%</dd><dt>Size</dt><dd>24 MB</dd></dl></article>
+        <article class="mcard"><div class="mh"><span class="dot a"></span><h3>LeafDoctor MobileNetV2</h3></div><p>PlantVillage-trained classifier for crop leaf diseases and healthy leaves.</p><dl><dt>Classes</dt><dd>38 (14 crops)</dd><dt>Benchmark accuracy</dt><dd>95.4%</dd><dt>Size</dt><dd>9 MB</dd></dl></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec tint" id="faq">
+    <div class="container narrow">
+      <div class="sec-title"><span class="kicker">FAQ</span><h2>Good to know</h2></div>
+      <details open><summary>Is my photo uploaded anywhere?</summary><p>No. All models run inside your browser. Only a species name is sent to GBIF and Wikipedia to fetch descriptions.</p></details>
+      <details><summary>How accurate is disease detection?</summary><p>The disease model scores about 95% on its benchmark of clean lab-style leaf photos. Real-world photos (clutter, lighting, other crops) are harder, so treat results as a screening aid and confirm with an expert.</p></details>
+      <details><summary>Which crops are supported for disease detection?</summary><p>Apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry and tomato.</p></details>
+      <details><summary>Does it work for plants outside Europe?</summary><p>Yes. BioCLIP covers 4,271 species photographed worldwide. A species absent from every model's list cannot be recognised, and low confidence is shown instead.</p></details>
+      <details><summary>Does it work offline?</summary><p>After the first launch the models are cached, so identification and diagnosis work offline. Descriptions and taxonomy need a connection.</p></details>
+    </div>
+  </section>
+
+  <section class="lp-cta"><div class="container center"><h2>Ready to meet your plants?</h2><p>Free forever. No account. Start in seconds.</p><a class="btn primary xl" href="#/app">Launch Verdant <svg class="ic"><use href="#i-arrow"/></svg></a></div></section>
+
+  <footer class="lp-foot"><div class="container foot-in">
+    <div><span class="brand"><span class="logo"><svg class="ic"><use href="#i-logo"/></svg></span><span>Verdant</span></span><p class="muted small">B.Tech final-year project · AI-based plant identification and leaf disease detection.</p></div>
+    <p class="muted small">Models: Pl@ntNet (Apache-2.0), BioCLIP-2.5 Mobile by N. Hamilton (MIT), MobileNetV2 PlantVillage (linkanjarad). Data: GBIF, Wikipedia. AI can be wrong: never eat or use a plant medicinally based on a result alone.</p>
+  </div></footer>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="app" class="hidden">
+  <aside class="side" id="side">
+    <a class="brand" href="#/"><span class="logo"><svg class="ic"><use href="#i-logo"/></svg></span><span>Verdant</span></a>
+    <nav class="side-nav" aria-label="App">
+      <span class="nav-label">Workspace</span>
+      <a href="#/app" data-nav="dashboard"><svg class="ic"><use href="#i-home"/></svg> Dashboard</a>
+      <a href="#/app/identify" data-nav="identify"><svg class="ic"><use href="#i-leaf"/></svg> Identify plant</a>
+      <a href="#/app/diagnose" data-nav="diagnose"><svg class="ic"><use href="#i-pulse"/></svg> Diagnose leaf <span class="new-pill">New</span></a>
+      <a href="#/app/library" data-nav="library"><svg class="ic"><use href="#i-clock"/></svg> Library <span class="count" id="libCount">0</span></a>
+      <span class="nav-label">Learn</span>
+      <a href="#/app/about" data-nav="about"><svg class="ic"><use href="#i-book"/></svg> How it works</a>
+    </nav>
+    <div class="engine-card" id="engineCard">
+      <div class="ec-top"><span class="ec-dot" id="ecDot"></span><b id="ecTitle">AI engine</b></div>
+      <div class="ec-list" id="ecList"></div>
+      <div class="bar sm"><div id="ecBar"></div></div>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+      <div class="crumbs"><span class="muted">Verdant</span><span class="sep">/</span><b id="pageTitle">Dashboard</b></div>
+      <div class="top-actions">
+        <span class="chip" id="chip"><i></i><span id="chipText">Starting…</span></span>
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle theme"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings"><svg class="ic"><use href="#i-sliders"/></svg></button>
+      </div>
+    </header>
+
+    <main class="views" id="views">
+      <!-- DASHBOARD -->
+      <section data-view="dashboard" class="view">
+        <div class="page-head">
+          <div><h1>Welcome back</h1><p class="muted">Identify plants, diagnose leaves and track everything you scan.</p></div>
+        </div>
+        <div class="quick">
+          <a class="qa qa-id" href="#/app/identify">
+            <div class="qa-ic"><svg class="ic"><use href="#i-leaf"/></svg></div>
+            <div><h3>Identify a plant</h3><p>Name any plant from a photo, worldwide.</p></div><svg class="ic go"><use href="#i-arrow"/></svg>
+          </a>
+          <a class="qa qa-dx" href="#/app/diagnose">
+            <div class="qa-ic"><svg class="ic"><use href="#i-pulse"/></svg></div>
+            <div><h3>Diagnose a leaf</h3><p>Detect disease and get a treatment plan.</p></div><svg class="ic go"><use href="#i-arrow"/></svg>
+          </a>
+        </div>
+        <div class="card phone-card hidden" id="phoneCard">
+          <div id="qr" class="qr" aria-label="QR code to open Verdant on your phone"></div>
+          <div class="pc-body">
+            <h3>Use Verdant on your phone</h3>
+            <p class="muted">Scan with your phone camera (same Wi-Fi as this computer). The <b>Camera</b> button then opens your phone's real camera.</p>
+            <code id="phoneUrl"></code>
+            <p class="muted small">If it doesn't open, allow "powershell" through Windows Firewall when prompted, or deploy the folder to any HTTPS static host.</p>
+          </div>
+        </div>
+        <div class="stats-grid" id="stats"></div>
+        <div class="dash-grid">
+          <div class="card"><div class="card-h"><h3>Activity</h3><span class="muted small">Last 7 days</span></div><div id="chart" class="chart"></div></div>
+          <div class="card"><div class="card-h"><h3>Recent scans</h3><a href="#/app/library" class="link">View all</a></div><div id="recent" class="recent"></div></div>
+        </div>
+      </section>
+
+      <!-- IDENTIFY -->
+      <section data-view="identify" class="view hidden"></section>
+      <!-- DIAGNOSE -->
+      <section data-view="diagnose" class="view hidden"></section>
+
+      <!-- LIBRARY -->
+      <section data-view="library" class="view hidden">
+        <div class="page-head">
+          <div><h1>Library</h1><p class="muted">Every identification and diagnosis, saved on this device.</p></div>
+          <div class="head-actions"><button class="btn sm" id="exportBtn"><svg class="ic"><use href="#i-download"/></svg> Export CSV</button><button class="btn sm danger" id="clearBtn"><svg class="ic"><use href="#i-trash"/></svg> Clear all</button></div>
+        </div>
+        <div class="toolbar">
+          <div class="seg-tabs" id="libFilter"><button class="on" data-f="all">All</button><button data-f="identify">Plants</button><button data-f="diagnose">Diseases</button></div>
+          <label class="search"><svg class="ic"><use href="#i-search"/></svg><input id="libSearch" type="search" placeholder="Search your library…"></label>
+        </div>
+        <div id="libGrid" class="lib-grid"></div>
+      </section>
+
+      <!-- ABOUT -->
+      <section data-view="about" class="view hidden">
+        <div class="page-head"><div><h1>How it works</h1><p class="muted">Architecture, models and limits.</p></div></div>
+        <div class="card prose">
+          <h3>Pipeline</h3>
+          <p>Photo → resize and normalise → neural networks (ONNX Runtime Web, WebAssembly) → fusion and knowledge base → GBIF and Wikipedia enrichment.</p>
+          <h3>Species identification</h3>
+          <p>Two models run side by side: <b>Pl@ntNet MobileNetV4</b> (7,806 species, Europe specialist) and <b>BioCLIP-2.5 Mobile</b> (4,271 species, worldwide). Probabilities are calibrated and averaged (0.4 / 0.6). Species both models rank in their top 3 are combined as independent evidence (noisy-OR), so agreement raises confidence.</p>
+          <h3>Leaf disease detection</h3>
+          <p><b>LeafDoctor</b> is a MobileNetV2 trained on the PlantVillage dataset (38 classes over 14 crops, ~95% benchmark accuracy). Treatment guidance comes from a curated knowledge base. PlantVillage photos are taken on plain backgrounds, so field photos with clutter can be less accurate. Use close, well-lit, single-leaf photos.</p>
+          <h3>Privacy</h3>
+          <p>Photos stay in your browser. Only species names are sent to GBIF and Wikipedia.</p>
+          <h3>Limits</h3>
+          <p>AI can be wrong. Species outside the models' lists and crops outside the 14 supported ones cannot be recognised. Never eat or medicate with a plant, or apply chemicals, based on this result alone. Consult a local agricultural extension service.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="App">
+    <a href="#/app" data-nav="dashboard"><svg class="ic"><use href="#i-home"/></svg><span>Home</span></a>
+    <a href="#/app/identify" data-nav="identify"><svg class="ic"><use href="#i-leaf"/></svg><span>Identify</span></a>
+    <a href="#/app/diagnose" data-nav="diagnose"><svg class="ic"><use href="#i-pulse"/></svg><span>Diagnose</span></a>
+    <a href="#/app/library" data-nav="library"><svg class="ic"><use href="#i-clock"/></svg><span>Library</span></a>
+  </nav>
+  <div class="scrim hidden" id="scrim"></div>
+</div>
+
+<dialog id="dlg">
+  <form method="dialog" class="dlg-body">
+    <div class="dlg-head"><h2>Settings</h2><button value="cancel" class="icon-btn" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <label class="field">Plant recognition engine
+      <select id="mode">
+        <option value="auto">Auto · both models, cross-checked (recommended)</option>
+        <option value="plantnet">Pl@ntNet only · Europe specialist, 79 MB</option>
+        <option value="global">BioCLIP only · worldwide, 24 MB, fastest</option>
+      </select>
+    </label>
+    <p class="muted small">Models download once and are cached in your browser. The leaf-disease model (9 MB) loads the first time you open Diagnose.</p>
+    <div class="dlg-actions"><button value="cancel" class="btn">Cancel</button><button value="ok" class="btn primary">Save</button></div>
+  </form>
+</dialog>
+
+<dialog id="camDlg" class="cam"><div class="cam-body">
+  <video id="video" autoplay playsinline muted></video>
+  <div class="cam-bar"><button class="btn" id="camClose" type="button">Cancel</button><button class="shutter" id="camShot" type="button" aria-label="Take photo"></button><span style="width:84px"></span></div>
+</div></dialog>
+
+<div id="toast" class="toast" role="status"></div>
+<script src="knowledge.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
