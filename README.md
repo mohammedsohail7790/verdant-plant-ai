@@ -1,6 +1,6 @@
 # Plantifi.ai · AI Plant Identification & Leaf Disease Detection
 
-**Built by Abdul Basit Khan** · B.Tech final-year project. A SaaS-style web app that **identifies plants worldwide** and **detects crop leaf diseases**
+**Built by Abdul Basit Khan** · B.E. final-year project. A SaaS-style web app that **identifies plants worldwide** and **detects crop leaf diseases**
 (with treatment advice) using neural networks that run **privately in the browser**. Free, no account, no API key.
 
 ## Run
