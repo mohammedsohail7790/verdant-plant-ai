@@ -2,20 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1f17">
-  <title>Verdant · AI Plant Identification &amp; Leaf Disease Detection</title>
-  <meta name="description" content="Identify plants worldwide and diagnose leaf diseases with AI that runs privately in your browser. Free, no account.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23059669'/%3E%3Cpath d='M32 50V30M32 30c0-10 7-16 18-16 0 11-6 18-18 16zM32 38c0-8-5-12-14-12 0 9 5 14 14 12z' fill='none' stroke='%23ecfccb' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06110c">
+  <title>Plantifi.ai · AI Plant Identification &amp; Leaf Disease Detection</title>
+  <meta name="description" content="Plantifi.ai identifies plants worldwide and diagnoses crop leaf diseases with AI that runs privately in your browser. Free, no account.">
+  <meta property="og:title" content="Plantifi.ai · Identify any plant. Diagnose every leaf.">
+  <meta property="og:description" content="Private, on-device AI for plant identification and leaf disease detection.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2310b981'/%3E%3Cstop offset='1' stop-color='%230d9488'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M16 48C16 28 27 16 48 14c0 21-10 34-32 34z' fill='%23fff'/%3E%3Cpath d='M20 44L38 26' stroke='%23059669' stroke-width='3.5' stroke-linecap='round'/%3E%3Ccircle cx='47' cy='17' r='5' fill='%23bef264' stroke='%23065f46' stroke-width='2'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script defer src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <symbol id="i-logo" viewBox="0 0 64 64"><path d="M32 52V30M32 30c0-10 7-16 18-16 0 11-6 18-18 16zM32 40c0-8-5-12-14-12 0 9 5 14 14 12z" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 64 64"><path d="M12 52C12 29 25 13 52 10c0 25-12 42-40 42z" fill="#fff"/><path d="M17 47L40 24" stroke="#059669" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="48" cy="16" r="5.5" fill="#bef264" stroke="#065f46" stroke-width="2.5"/></symbol>
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
   <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5.1-6C9.5 14.5 12 13 13 12"/></symbol>
   <symbol id="i-pulse" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
@@ -52,97 +54,148 @@
   <symbol id="i-bug" viewBox="0 0 24 24"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M19 7l-3 2M5 7l3 2M19 19l-3-2M5 19l3-2M20 13h-4M4 13h4M10 2l1 2M14 2l-1 2"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+  <symbol id="i-command" viewBox="0 0 24 24"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></symbol>
+  <symbol id="i-corner" viewBox="0 0 24 24"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></symbol>
+  <symbol id="i-sprout" viewBox="0 0 24 24"><path d="M7 20h10M12 20v-9"/><path d="M12 11C12 7 9 5 5 5c0 4 2 6 7 6zM12 11c0-4 3-6 7-6 0 4-2 6-7 6z"/></symbol>
 </defs></svg>
 
 <!-- ===================== LANDING ===================== -->
 <div id="landing">
   <header class="lp-nav" id="lpNav">
     <div class="lp-nav-in">
-      <a class="brand" href="#/"><span class="logo"><svg class="ic"><use href="#i-logo"/></svg></span><span>Verdant</span></a>
+      <a class="brand" href="#/" aria-label="Plantifi.ai home"><span class="logo"><svg class="logo-ic"><use href="#i-logo"/></svg></span><span class="wm">Plantifi<b>.ai</b></span></a>
       <nav class="lp-links" aria-label="Primary">
-        <a href="#features" data-scroll>Features</a><a href="#how" data-scroll>How it works</a><a href="#tech" data-scroll>Technology</a><a href="#faq" data-scroll>FAQ</a>
+        <a href="#features" data-scroll>Features</a><a href="#try" data-scroll>Try it</a><a href="#how" data-scroll>How it works</a><a href="#tech" data-scroll>Technology</a><a href="#faq" data-scroll>FAQ</a>
       </nav>
       <div class="lp-actions">
         <button class="icon-btn" data-theme-toggle aria-label="Toggle theme"><svg class="ic"><use href="#i-moon"/></svg></button>
-        <a class="btn primary" href="#/app">Launch app <svg class="ic"><use href="#i-arrow"/></svg></a>
+        <a class="btn primary" href="#/app">Open app <svg class="ic"><use href="#i-arrow"/></svg></a>
       </div>
     </div>
   </header>
 
   <section class="lp-hero">
-    <div class="lp-glow" aria-hidden="true"></div>
-    <div class="container center">
-      <a class="announce" href="#/app/diagnose"><span class="new">New</span> Leaf disease detection for 14 crops <svg class="ic"><use href="#i-arrow"/></svg></a>
-      <h1>Know every plant.<br><span class="grad">Diagnose every leaf.</span></h1>
-      <p class="lead">Verdant is an AI plant companion that identifies species worldwide and detects crop leaf diseases, with treatment advice. Everything runs privately in your browser.</p>
-      <div class="cta-row">
-        <a class="btn primary xl" href="#/app/identify"><svg class="ic"><use href="#i-camera"/></svg> Identify a plant</a>
-        <a class="btn xl" href="#/app/diagnose"><svg class="ic"><use href="#i-pulse"/></svg> Diagnose a leaf</a>
+    <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <a class="announce" href="#/app/diagnose"><span class="new">New</span> Leaf disease detection for 14 crops <svg class="ic"><use href="#i-arrow"/></svg></a>
+        <h1>Identify any plant.<br><span class="grad">Diagnose every leaf.</span></h1>
+        <p class="lead">Plantifi.ai is your AI plant companion. Name species worldwide, detect crop leaf diseases and get a treatment plan, all privately on your device.</p>
+        <div class="cta-row">
+          <a class="btn primary xl glow" href="#/app/identify"><svg class="ic"><use href="#i-camera"/></svg> Identify a plant</a>
+          <a class="btn xl ghost-dark" href="#/app/diagnose"><svg class="ic"><use href="#i-pulse"/></svg> Diagnose a leaf</a>
+        </div>
+        <ul class="proof">
+          <li><svg class="ic"><use href="#i-lock"/></svg> Photos never leave your device</li>
+          <li><svg class="ic"><use href="#i-zap"/></svg> Results in under a second</li>
+          <li><svg class="ic"><use href="#i-check"/></svg> Free, no sign-up</li>
+        </ul>
       </div>
-      <ul class="trust"><li><svg class="ic"><use href="#i-lock"/></svg> Photos never leave your device</li><li><svg class="ic"><use href="#i-zap"/></svg> Results in under a second</li><li><svg class="ic"><use href="#i-wifi-off"/></svg> Works offline</li><li><svg class="ic"><use href="#i-check"/></svg> Free, no sign-up</li></ul>
 
-      <div class="showcase" aria-hidden="true">
-        <div class="win">
-          <div class="win-bar"><i></i><i></i><i></i><span>verdant.app / identify</span></div>
-          <div class="win-body">
-            <div class="win-side"><b></b><span class="on"></span><span></span><span></span><span></span></div>
-            <div class="win-main">
-              <div class="win-photo"></div>
-              <div class="win-card">
-                <div class="row"><span class="tag ok">Both AIs agree</span><span class="pc">96%</span></div>
-                <h4>Delicious Monster</h4><em>Monstera deliciosa · Araceae</em>
-                <div class="bars"><i style="--w:96%"></i><i style="--w:3%"></i><i style="--w:1%"></i></div>
-                <div class="chips"><span>Taxonomy</span><span>Wikipedia</span><span>Care</span></div>
-              </div>
-              <div class="win-card dis">
-                <div class="row"><span class="tag warn">Moderate severity</span><span class="pc">94%</span></div>
-                <h4>Tomato · Early blight</h4><em>Fungal · Alternaria solani</em>
-                <div class="bars"><i style="--w:94%"></i><i style="--w:4%"></i></div>
-                <div class="chips"><span>Symptoms</span><span>Treatment</span></div>
-              </div>
-            </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="hcard hc-id">
+          <img src="samples/plant-dog-rose.jpg" alt="" class="hc-photo">
+          <div class="hc-body">
+            <div class="hc-row"><span class="hc-tag ok"><svg class="ic"><use href="#i-check"/></svg> Both AIs agree</span>
+              <svg class="hc-ring" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" class="rb"/><circle cx="22" cy="22" r="18" class="rf" style="--d:59"/><text x="22" y="26" text-anchor="middle">48%</text></svg></div>
+            <h4>Dog Rose</h4><p><i>Rosa canina</i> · Rosaceae</p>
           </div>
         </div>
+        <div class="hcard hc-dx">
+          <img src="samples/dx-tomato-spider-mites.jpg" alt="" class="hc-photo sm">
+          <div class="hc-body">
+            <span class="hc-tag warn"><svg class="ic"><use href="#i-alert"/></svg> Pest · Moderate</span>
+            <h4>Spider mites</h4><p>Tomato · 99% confidence</p>
+            <div class="hc-steps"><span>1 Spray leaves with water</span><span>2 Apply insecticidal soap</span></div>
+          </div>
+        </div>
+        <div class="hchip c1"><svg class="ic"><use href="#i-cpu"/></svg> On-device AI</div>
+        <div class="hchip c2"><svg class="ic"><use href="#i-zap"/></svg> 0.8 s</div>
+        <div class="hchip c3"><svg class="ic"><use href="#i-globe"/></svg> Worldwide</div>
       </div>
     </div>
+  </section>
+
+  <section class="marquee" aria-label="Supported crops">
+    <p class="mq-label">Leaf disease detection for</p>
+    <div class="mq-track"><div class="mq-row">
+      <span>Apple</span><span>Blueberry</span><span>Cherry</span><span>Maize</span><span>Grape</span><span>Orange</span><span>Peach</span><span>Bell pepper</span><span>Potato</span><span>Raspberry</span><span>Soybean</span><span>Squash</span><span>Strawberry</span><span>Tomato</span>
+      <span>Apple</span><span>Blueberry</span><span>Cherry</span><span>Maize</span><span>Grape</span><span>Orange</span><span>Peach</span><span>Bell pepper</span><span>Potato</span><span>Raspberry</span><span>Soybean</span><span>Squash</span><span>Strawberry</span><span>Tomato</span>
+    </div></div>
   </section>
 
   <section class="lp-sec" id="features">
     <div class="container">
-      <div class="sec-title"><span class="kicker">Features</span><h2>Everything you need to understand your plants</h2><p>One toolkit for gardeners, students, farmers and researchers.</p></div>
-      <div class="feat-grid">
-        <article class="feat big"><div class="f-ic"><svg class="ic"><use href="#i-leaf"/></svg></div><h3>Worldwide species identification</h3><p>Two neural networks, a European specialist and a global generalist, cross-check each other. Agreement raises confidence, disagreement is flagged honestly.</p><div class="f-tags"><span>11,000+ species</span><span>Top-5 matches</span><span>Taxonomy</span></div></article>
-        <article class="feat big"><div class="f-ic amber"><svg class="ic"><use href="#i-pulse"/></svg></div><h3>Leaf disease detection</h3><p>Detects 26 diseases and pests across 14 crops including tomato, potato, apple, grape and maize, with severity, symptoms, treatment and prevention.</p><div class="f-tags"><span>38 classes</span><span>Severity rating</span><span>Treatment plan</span></div></article>
-        <article class="feat"><div class="f-ic blue"><svg class="ic"><use href="#i-lock"/></svg></div><h3>Private by design</h3><p>Inference happens on your device. Your photos are never uploaded.</p></article>
-        <article class="feat"><div class="f-ic"><svg class="ic"><use href="#i-zap"/></svg></div><h3>Instant results</h3><p>WebAssembly-accelerated models return answers in well under a second.</p></article>
-        <article class="feat"><div class="f-ic violet"><svg class="ic"><use href="#i-book"/></svg></div><h3>Rich knowledge</h3><p>Common names, taxonomy and descriptions from GBIF and Wikipedia.</p></article>
-        <article class="feat"><div class="f-ic rose"><svg class="ic"><use href="#i-bar"/></svg></div><h3>Your plant library</h3><p>Searchable scan history with analytics and one-click export.</p></article>
+      <div class="sec-title reveal"><span class="kicker">Features</span><h2>Everything you need to understand your plants</h2><p>One private toolkit for gardeners, students, farmers and researchers.</p></div>
+      <div class="bento">
+        <article class="bx b7 reveal"><div class="bx-t"><span class="f-ic"><svg class="ic"><use href="#i-leaf"/></svg></span><h3>Worldwide species identification</h3><p>A European specialist and a global generalist vote on every photo. Agreement raises confidence; disagreement is flagged honestly.</p></div>
+          <div class="v-fuse"><div class="vf-models"><span><i class="d g"></i>Pl@ntNet · 7,806 species</span><span><i class="d b"></i>BioCLIP · 4,271 species</span></div><svg class="ic vf-arrow"><use href="#i-arrow"/></svg>
+          <div class="vf-res"><b>Aloe Vera</b><div class="vf-bar"><i style="--w:78%"></i></div><small>78% · Both AIs agree</small></div></div></article>
+        <article class="bx b5 reveal"><div class="bx-t"><span class="f-ic amber"><svg class="ic"><use href="#i-pulse"/></svg></span><h3>Leaf disease detection</h3><p>38 conditions with severity, symptoms, treatment and prevention.</p></div>
+          <div class="v-sev"><div class="vs-row"><span>Severity</span><div class="vs-meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><b>High</b></div><div class="vs-tags"><span>Fungal</span><span>Viral</span><span>Bacterial</span><span>Pest</span></div></div></article>
+        <article class="bx b4 reveal"><div class="bx-t"><span class="f-ic blue"><svg class="ic"><use href="#i-lock"/></svg></span><h3>Private by design</h3><p>Inference runs in your browser. Photos are never uploaded.</p></div>
+          <div class="v-lock"><i></i><i></i><i></i><svg class="ic"><use href="#i-lock"/></svg></div></article>
+        <article class="bx b4 reveal"><div class="bx-t"><span class="f-ic violet"><svg class="ic"><use href="#i-wifi-off"/></svg></span><h3>Works offline</h3><p>Models are cached after the first load, so it works with no signal.</p></div>
+          <div class="v-off"><span>112 MB</span><small>downloaded once</small></div></article>
+        <article class="bx b4 reveal"><div class="bx-t"><span class="f-ic rose"><svg class="ic"><use href="#i-camera"/></svg></span><h3>Built for your phone</h3><p>Open the native camera, snap, and get an answer.</p></div>
+          <div class="v-phone"><div class="vp-screen"><i></i><i></i><b></b></div></div></article>
+        <article class="bx b6 reveal"><div class="bx-t"><span class="f-ic"><svg class="ic"><use href="#i-bar"/></svg></span><h3>Your plant library</h3><p>Every scan saved on-device with search, filters, analytics and CSV export.</p></div>
+          <div class="v-bars"><i style="--h:30%"></i><i style="--h:55%"></i><i style="--h:40%"></i><i style="--h:80%"></i><i style="--h:62%"></i><i style="--h:95%"></i><i style="--h:48%"></i></div></article>
+        <article class="bx b6 reveal"><div class="bx-t"><span class="f-ic violet"><svg class="ic"><use href="#i-book"/></svg></span><h3>Rich plant knowledge</h3><p>Common names, taxonomy and descriptions from GBIF and Wikipedia.</p></div>
+          <div class="v-tax"><span>Plantae</span><svg class="ic"><use href="#i-arrow"/></svg><span>Asparagales</span><svg class="ic"><use href="#i-arrow"/></svg><span>Asphodelaceae</span><svg class="ic"><use href="#i-arrow"/></svg><span class="s">Aloe vera</span></div></article>
       </div>
     </div>
   </section>
 
-  <section class="lp-sec tint" id="how">
+  <section class="lp-sec tint" id="try">
     <div class="container">
-      <div class="sec-title"><span class="kicker">How it works</span><h2>From photo to answer in three steps</h2></div>
-      <ol class="steps">
-        <li><span class="n">01</span><h3>Capture</h3><p>Upload, paste or snap a photo. It's resized locally and never sent anywhere.</p></li>
-        <li><span class="n">02</span><h3>Analyse</h3><p>Neural networks run in WebAssembly inside your tab and return ranked predictions.</p></li>
-        <li><span class="n">03</span><h3>Act</h3><p>Get names, confidence, taxonomy, and for leaves, a clear treatment plan.</p></li>
+      <div class="sec-title reveal"><span class="kicker">Try it now</span><h2>One click, real AI, no upload</h2><p>Pick a sample and watch Plantifi.ai analyse it live in your browser.</p></div>
+      <div class="try-grid reveal">
+        <div><h3 class="try-h"><svg class="ic"><use href="#i-leaf"/></svg> Identify a plant</h3>
+          <div class="try-row">
+            <a href="#/app/identify?s=0" class="try"><img src="samples/plant-monstera.jpg" alt="Monstera" loading="lazy"><span>Monstera</span></a>
+            <a href="#/app/identify?s=1" class="try"><img src="samples/plant-hibiscus.jpg" alt="Hibiscus" loading="lazy"><span>Hibiscus</span></a>
+            <a href="#/app/identify?s=2" class="try"><img src="samples/plant-dog-rose.jpg" alt="Dog rose" loading="lazy"><span>Dog rose</span></a>
+            <a href="#/app/identify?s=3" class="try"><img src="samples/plant-aloe.jpg" alt="Aloe" loading="lazy"><span>Aloe</span></a>
+            <a href="#/app/identify?s=4" class="try"><img src="samples/plant-lavender.jpg" alt="Lavender" loading="lazy"><span>Lavender</span></a>
+            <a href="#/app/identify?s=5" class="try"><img src="samples/plant-mango.jpg" alt="Mango" loading="lazy"><span>Mango</span></a>
+          </div></div>
+        <div><h3 class="try-h amber"><svg class="ic"><use href="#i-pulse"/></svg> Diagnose a leaf</h3>
+          <div class="try-row">
+            <a href="#/app/diagnose?s=0" class="try"><img src="samples/dx-tomato-yellow-leaf-curl.jpg" alt="Tomato virus" loading="lazy"><span>Tomato virus</span></a>
+            <a href="#/app/diagnose?s=1" class="try"><img src="samples/dx-tomato-spider-mites.jpg" alt="Tomato mites" loading="lazy"><span>Tomato mites</span></a>
+            <a href="#/app/diagnose?s=2" class="try"><img src="samples/dx-squash-powdery-mildew.jpg" alt="Squash" loading="lazy"><span>Squash</span></a>
+            <a href="#/app/diagnose?s=3" class="try"><img src="samples/dx-peach-bacterial-spot.jpg" alt="Peach" loading="lazy"><span>Peach</span></a>
+            <a href="#/app/diagnose?s=4" class="try"><img src="samples/dx-grape-leaf-spot.jpg" alt="Grape" loading="lazy"><span>Grape</span></a>
+            <a href="#/app/diagnose?s=5" class="try"><img src="samples/dx-corn-healthy.jpg" alt="Healthy corn" loading="lazy"><span>Healthy corn</span></a>
+          </div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="how">
+    <div class="container">
+      <div class="sec-title reveal"><span class="kicker">How it works</span><h2>From photo to answer in three steps</h2></div>
+      <ol class="steps reveal">
+        <li><span class="n">1</span><div class="s-ic"><svg class="ic"><use href="#i-camera"/></svg></div><h3>Capture</h3><p>Upload, paste or snap a photo. It’s resized locally and never sent anywhere.</p></li>
+        <li><span class="n">2</span><div class="s-ic"><svg class="ic"><use href="#i-cpu"/></svg></div><h3>Analyse</h3><p>Neural networks run in WebAssembly inside your tab and return ranked predictions.</p></li>
+        <li><span class="n">3</span><div class="s-ic"><svg class="ic"><use href="#i-sprout"/></svg></div><h3>Act</h3><p>Get names, confidence and taxonomy, or for leaves, a clear treatment plan.</p></li>
       </ol>
     </div>
   </section>
 
-  <section class="lp-sec" id="tech">
+  <section class="lp-sec tint" id="tech">
     <div class="container">
-      <div class="sec-title"><span class="kicker">Technology</span><h2>Three open models, one pipeline</h2><p>All inference is client-side via ONNX Runtime Web. Models are downloaded once, then cached.</p></div>
-      <div class="pipeline">
+      <div class="sec-title reveal"><span class="kicker">Technology</span><h2>Three open models, one pipeline</h2><p>All inference is client-side via ONNX Runtime Web. Models download once, then cache.</p></div>
+      <div class="pipeline reveal">
         <div class="node"><b>Photo</b><span>JPEG / PNG</span></div><i class="arrow"></i>
         <div class="node"><b>Pre-process</b><span>resize · normalise</span></div><i class="arrow"></i>
         <div class="node stack"><div><b>Pl@ntNet CNN</b><span>species · Europe</span></div><div><b>BioCLIP student</b><span>species · worldwide</span></div><div><b>LeafDoctor</b><span>disease · 14 crops</span></div></div><i class="arrow"></i>
         <div class="node"><b>Fusion + KB</b><span>consensus · advice</span></div><i class="arrow"></i>
         <div class="node"><b>Result</b><span>GBIF · Wikipedia</span></div>
       </div>
-      <div class="model-grid">
+      <div class="model-grid reveal">
         <article class="mcard"><div class="mh"><span class="dot g"></span><h3>Pl@ntNet MobileNetV4</h3></div><p>Official Pl@ntCLEF 2024 model, distilled from a ViT-B teacher.</p><dl><dt>Classes</dt><dd>7,806 species</dd><dt>Top-1 / Top-5</dt><dd>71.4% / 90.6%</dd><dt>Size</dt><dd>79 MB</dd></dl></article>
         <article class="mcard"><div class="mh"><span class="dot b"></span><h3>BioCLIP-2.5 Mobile</h3></div><p>FastViT student of BioCLIP 2.5 matched to species text embeddings.</p><dl><dt>Classes</dt><dd>4,271 species</dd><dt>Teacher agreement</dt><dd>71.7% / 88.8%</dd><dt>Size</dt><dd>24 MB</dd></dl></article>
         <article class="mcard"><div class="mh"><span class="dot a"></span><h3>LeafDoctor MobileNetV2</h3></div><p>PlantVillage-trained classifier for crop leaf diseases and healthy leaves.</p><dl><dt>Classes</dt><dd>38 (14 crops)</dd><dt>Benchmark accuracy</dt><dd>95.4%</dd><dt>Size</dt><dd>9 MB</dd></dl></article>
@@ -150,29 +203,34 @@
     </div>
   </section>
 
-  <section class="lp-sec tint" id="faq">
+  <section class="lp-sec" id="faq">
     <div class="container narrow">
-      <div class="sec-title"><span class="kicker">FAQ</span><h2>Good to know</h2></div>
+      <div class="sec-title reveal"><span class="kicker">FAQ</span><h2>Good to know</h2></div>
+      <div class="reveal">
       <details open><summary>Is my photo uploaded anywhere?</summary><p>No. All models run inside your browser. Only a species name is sent to GBIF and Wikipedia to fetch descriptions.</p></details>
       <details><summary>How accurate is disease detection?</summary><p>The disease model scores about 95% on its benchmark of clean lab-style leaf photos. Real-world photos (clutter, lighting, other crops) are harder, so treat results as a screening aid and confirm with an expert.</p></details>
       <details><summary>Which crops are supported for disease detection?</summary><p>Apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry and tomato.</p></details>
-      <details><summary>Does it work for plants outside Europe?</summary><p>Yes. BioCLIP covers 4,271 species photographed worldwide. A species absent from every model's list cannot be recognised, and low confidence is shown instead.</p></details>
+      <details><summary>Does it work for plants outside Europe?</summary><p>Yes. BioCLIP covers 4,271 species photographed worldwide. A species absent from every model’s list cannot be recognised, and low confidence is shown instead.</p></details>
       <details><summary>Does it work offline?</summary><p>After the first launch the models are cached, so identification and diagnosis work offline. Descriptions and taxonomy need a connection.</p></details>
+      </div>
     </div>
   </section>
 
-  <section class="lp-cta"><div class="container center"><h2>Ready to meet your plants?</h2><p>Free forever. No account. Start in seconds.</p><a class="btn primary xl" href="#/app">Launch Verdant <svg class="ic"><use href="#i-arrow"/></svg></a></div></section>
+  <section class="lp-cta"><div class="container center reveal"><div class="cta-box"><h2>Ready to meet your plants?</h2><p>Free forever. No account. Start in seconds.</p><a class="btn primary xl" href="#/app">Open Plantifi.ai <svg class="ic"><use href="#i-arrow"/></svg></a></div></div></section>
 
-  <footer class="lp-foot"><div class="container foot-in">
-    <div><span class="brand"><span class="logo"><svg class="ic"><use href="#i-logo"/></svg></span><span>Verdant</span></span><p class="muted small">B.Tech final-year project · AI-based plant identification and leaf disease detection.</p></div>
-    <p class="muted small">Models: Pl@ntNet (Apache-2.0), BioCLIP-2.5 Mobile by N. Hamilton (MIT), MobileNetV2 PlantVillage (linkanjarad). Data: GBIF, Wikipedia. AI can be wrong: never eat or use a plant medicinally based on a result alone.</p>
+  <footer class="lp-foot"><div class="container foot-grid">
+    <div class="foot-brand"><a class="brand" href="#/"><span class="logo"><svg class="logo-ic"><use href="#i-logo"/></svg></span><span class="wm">Plantifi<b>.ai</b></span></a><p class="muted small">B.Tech final-year project: AI-based plant identification and leaf disease detection.</p></div>
+    <div><h5>Product</h5><a href="#/app/identify">Identify a plant</a><a href="#/app/diagnose">Diagnose a leaf</a><a href="#/app/library">Library</a></div>
+    <div><h5>Project</h5><a href="#how" data-scroll>How it works</a><a href="#tech" data-scroll>Technology</a><a href="#faq" data-scroll>FAQ</a></div>
+    <p class="muted small foot-note">Models: Pl@ntNet (Apache-2.0), BioCLIP-2.5 Mobile by N. Hamilton (MIT), MobileNetV2 PlantVillage (linkanjarad). Data: GBIF, Wikipedia. AI can be wrong: never eat or use a plant medicinally based on a result alone.</p>
   </div></footer>
 </div>
 
 <!-- ===================== APP SHELL ===================== -->
 <div id="app" class="hidden">
   <aside class="side" id="side">
-    <a class="brand" href="#/"><span class="logo"><svg class="ic"><use href="#i-logo"/></svg></span><span>Verdant</span></a>
+    <a class="brand" href="#/"><span class="logo"><svg class="logo-ic"><use href="#i-logo"/></svg></span><span class="wm">Plantifi<b>.ai</b></span></a>
+    <button class="side-search" id="searchBtn" type="button"><svg class="ic"><use href="#i-search"/></svg><span>Search or jump to…</span><kbd>Ctrl K</kbd></button>
     <nav class="side-nav" aria-label="App">
       <span class="nav-label">Workspace</span>
       <a href="#/app" data-nav="dashboard"><svg class="ic"><use href="#i-home"/></svg> Dashboard</a>
@@ -181,6 +239,7 @@
       <a href="#/app/library" data-nav="library"><svg class="ic"><use href="#i-clock"/></svg> Library <span class="count" id="libCount">0</span></a>
       <span class="nav-label">Learn</span>
       <a href="#/app/about" data-nav="about"><svg class="ic"><use href="#i-book"/></svg> How it works</a>
+      <a href="#/" data-nav="site"><svg class="ic"><use href="#i-globe"/></svg> Website</a>
     </nav>
     <div class="engine-card" id="engineCard">
       <div class="ec-top"><span class="ec-dot" id="ecDot"></span><b id="ecTitle">AI engine</b></div>
@@ -192,52 +251,33 @@
   <div class="app-main">
     <header class="topbar">
       <button class="icon-btn menu-btn" id="menuBtn" aria-label="Menu"><svg class="ic"><use href="#i-menu"/></svg></button>
-      <div class="crumbs"><span class="muted">Verdant</span><span class="sep">/</span><b id="pageTitle">Dashboard</b></div>
+      <div class="crumbs"><span class="muted">Plantifi.ai</span><span class="sep">/</span><b id="pageTitle">Dashboard</b></div>
       <div class="top-actions">
         <span class="chip" id="chip"><i></i><span id="chipText">Starting…</span></span>
+        <button class="icon-btn" id="searchBtn2" aria-label="Search"><svg class="ic"><use href="#i-search"/></svg></button>
         <button class="icon-btn" data-theme-toggle aria-label="Toggle theme"><svg class="ic"><use href="#i-moon"/></svg></button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings"><svg class="ic"><use href="#i-sliders"/></svg></button>
       </div>
     </header>
 
     <main class="views" id="views">
-      <!-- DASHBOARD -->
       <section data-view="dashboard" class="view">
-        <div class="page-head">
-          <div><h1>Welcome back</h1><p class="muted">Identify plants, diagnose leaves and track everything you scan.</p></div>
-        </div>
-        <div class="quick">
-          <a class="qa qa-id" href="#/app/identify">
-            <div class="qa-ic"><svg class="ic"><use href="#i-leaf"/></svg></div>
-            <div><h3>Identify a plant</h3><p>Name any plant from a photo, worldwide.</p></div><svg class="ic go"><use href="#i-arrow"/></svg>
-          </a>
-          <a class="qa qa-dx" href="#/app/diagnose">
-            <div class="qa-ic"><svg class="ic"><use href="#i-pulse"/></svg></div>
-            <div><h3>Diagnose a leaf</h3><p>Detect disease and get a treatment plan.</p></div><svg class="ic go"><use href="#i-arrow"/></svg>
-          </a>
-        </div>
+        <div id="dashHero"></div>
         <div class="card phone-card hidden" id="phoneCard">
-          <div id="qr" class="qr" aria-label="QR code to open Verdant on your phone"></div>
+          <div id="qr" class="qr" aria-label="QR code to open Plantifi.ai on your phone"></div>
           <div class="pc-body">
-            <h3>Use Verdant on your phone</h3>
-            <p class="muted">Scan with your phone camera (same Wi-Fi as this computer). The <b>Camera</b> button then opens your phone's real camera.</p>
+            <h3>Use Plantifi.ai on your phone</h3>
+            <p class="muted">Scan with your phone camera (same Wi-Fi as this computer). The <b>Camera</b> button then opens your phone’s real camera.</p>
             <code id="phoneUrl"></code>
-            <p class="muted small">If it doesn't open, allow "powershell" through Windows Firewall when prompted, or deploy the folder to any HTTPS static host.</p>
+            <p class="muted small">If it doesn’t open, allow “powershell” through Windows Firewall when prompted, or use the public link.</p>
           </div>
         </div>
-        <div class="stats-grid" id="stats"></div>
-        <div class="dash-grid">
-          <div class="card"><div class="card-h"><h3>Activity</h3><span class="muted small">Last 7 days</span></div><div id="chart" class="chart"></div></div>
-          <div class="card"><div class="card-h"><h3>Recent scans</h3><a href="#/app/library" class="link">View all</a></div><div id="recent" class="recent"></div></div>
-        </div>
+        <div id="dashRest"></div>
       </section>
 
-      <!-- IDENTIFY -->
       <section data-view="identify" class="view hidden"></section>
-      <!-- DIAGNOSE -->
       <section data-view="diagnose" class="view hidden"></section>
 
-      <!-- LIBRARY -->
       <section data-view="library" class="view hidden">
         <div class="page-head">
           <div><h1>Library</h1><p class="muted">Every identification and diagnosis, saved on this device.</p></div>
@@ -250,7 +290,6 @@
         <div id="libGrid" class="lib-grid"></div>
       </section>
 
-      <!-- ABOUT -->
       <section data-view="about" class="view hidden">
         <div class="page-head"><div><h1>How it works</h1><p class="muted">Architecture, models and limits.</p></div></div>
         <div class="card prose">
@@ -263,7 +302,9 @@
           <h3>Privacy</h3>
           <p>Photos stay in your browser. Only species names are sent to GBIF and Wikipedia.</p>
           <h3>Limits</h3>
-          <p>AI can be wrong. Species outside the models' lists and crops outside the 14 supported ones cannot be recognised. Never eat or medicate with a plant, or apply chemicals, based on this result alone. Consult a local agricultural extension service.</p>
+          <p>AI can be wrong. Species outside the models’ lists and crops outside the 14 supported ones cannot be recognised. Never eat or medicate with a plant, or apply chemicals, based on this result alone. Consult a local agricultural extension service.</p>
+          <h3>Shortcuts</h3>
+          <p><kbd>Ctrl</kbd> <kbd>K</kbd> command palette · <kbd>V</kbd> paste a photo · drag a photo anywhere to analyse it.</p>
         </div>
       </section>
     </main>
@@ -278,6 +319,8 @@
   <div class="scrim hidden" id="scrim"></div>
 </div>
 
+<div id="dropAll" class="drop-all hidden"><div><div class="da-ic"><svg class="ic"><use href="#i-upload"/></svg></div><b id="dropAllText">Drop a photo to analyse it</b><span>Stays on your device</span></div></div>
+
 <dialog id="dlg">
   <form method="dialog" class="dlg-body">
     <div class="dlg-head"><h2>Settings</h2><button value="cancel" class="icon-btn" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -291,6 +334,28 @@
     <p class="muted small">Models download once and are cached in your browser. The leaf-disease model (9 MB) loads the first time you open Diagnose.</p>
     <div class="dlg-actions"><button value="cancel" class="btn">Cancel</button><button value="ok" class="btn primary">Save</button></div>
   </form>
+</dialog>
+
+<dialog id="cmdk" class="cmdk">
+  <div class="ck-box">
+    <label class="ck-in"><svg class="ic"><use href="#i-search"/></svg><input id="ckInput" type="text" placeholder="Type a command or search…" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></label>
+    <div id="ckList" class="ck-list" role="listbox"></div>
+    <div class="ck-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> select</span></div>
+  </div>
+</dialog>
+
+<dialog id="welcome" class="welcome">
+  <div class="wl-body">
+    <div class="wl-logo"><span class="logo lg"><svg class="logo-ic"><use href="#i-logo"/></svg></span></div>
+    <h2>Welcome to Plantifi.ai</h2>
+    <p class="muted">Your private AI plant companion. Everything runs on your device.</p>
+    <ul class="wl-list">
+      <li><span class="wl-i"><svg class="ic"><use href="#i-leaf"/></svg></span><div><b>Identify any plant</b><p>11,000+ species worldwide, cross-checked by two AI models.</p></div></li>
+      <li><span class="wl-i amber"><svg class="ic"><use href="#i-pulse"/></svg></span><div><b>Diagnose crop leaves</b><p>38 conditions across 14 crops, with a treatment plan.</p></div></li>
+      <li><span class="wl-i blue"><svg class="ic"><use href="#i-lock"/></svg></span><div><b>Private and free</b><p>No account, no upload. First launch downloads the AI models once.</p></div></li>
+    </ul>
+    <div class="wl-actions"><button class="btn primary xl" id="wlSample" type="button"><svg class="ic"><use href="#i-sparkle"/></svg> Try a sample plant</button><button class="btn xl" id="wlClose" type="button">Explore the app</button></div>
+  </div>
 </dialog>
 
 <dialog id="camDlg" class="cam"><div class="cam-body">
