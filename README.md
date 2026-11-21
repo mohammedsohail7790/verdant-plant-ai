@@ -1,4 +1,4 @@
-# Verdant · AI Plant Identification & Leaf Disease Detection
+# Plantifi.ai · AI Plant Identification & Leaf Disease Detection
 
 B.Tech final-year project. A SaaS-style web app that **identifies plants worldwide** and **detects crop leaf diseases**
 (with treatment advice) using neural networks that run **privately in the browser**. Free, no account, no API key.
@@ -16,6 +16,13 @@ First launch downloads the models once (~112 MB total) and caches them in Indexe
 Why native camera: phones only allow a live in-page camera on HTTPS, and a LAN address is plain HTTP. The app detects touch devices / non-secure
 pages and uses `<input capture>` instead; desktop on localhost keeps the live viewfinder. For a permanent link with live camera and PWA-style
 caching, upload the folder to any HTTPS static host (GitHub Pages, Netlify, Cloudflare Pages).
+
+## UX highlights
+- Command palette (**Ctrl/Cmd + K**, or **/**) to jump anywhere, run samples, toggle theme, export
+- Live analysis stepper that shows the real pipeline stages while the models run
+- Drop a photo anywhere in the app; paste with Ctrl+V; one-click sample deep links (`#/app/identify?s=0`)
+- First-run welcome, dashboard with sparkline, leaf-health donut and top plants, thumbnails on top matches
+- Light and dark themes, fully responsive with a mobile bottom navigation
 
 ## Product
 - **Landing page** + **app shell** (sidebar, dashboard, light/dark theme, mobile bottom-nav)
